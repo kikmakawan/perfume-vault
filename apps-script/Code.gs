@@ -98,13 +98,19 @@ function setupToken() {
     props.setProperty('APP_TOKEN', t);
   }
   Logger.log('APP_TOKEN ของคุณคือ: ' + t);
-  var url = '';
-  try { url = ScriptApp.getService().getUrl() || ''; } catch (e) {}
-  if (url && /\/exec$/.test(url)) {
-    Logger.log('⚡ ลิงก์เชื่อมต่อ (คัดลอกไปเปิดบนมือถือ หรือวางในหน้าตั้งค่าของแอป):');
+  // เวลารันจาก Editor, Google จะให้ URL แบบทดสอบ (/dev) ไม่ใช่ /exec จึงต้องใช้ URL ที่ตั้งไว้ใน WEB_APP_URL
+  var url = String(props.getProperty('WEB_APP_URL') || '').trim();
+  if (!/\/exec$/.test(url)) {
+    try { var u = ScriptApp.getService().getUrl() || ''; if (/\/exec$/.test(u)) url = u; } catch (e) {}
+  }
+  if (/\/exec$/.test(url)) {
+    Logger.log('⚡ ลิงก์เชื่อมต่อ (ส่งเข้าไลน์ตัวเอง แล้วกดเปิดบนมือถือ):');
     Logger.log(APP_PAGE + '#/connect?u=' + encodeURIComponent(url) + '&t=' + t);
   } else {
-    Logger.log('ℹ️ ยังไม่ได้ Deploy เป็น Web app — Deploy ก่อน แล้วรัน setupToken อีกครั้งเพื่อรับลิงก์เชื่อมต่อแบบแตะเดียว');
+    Logger.log('ℹ️ ขั้นสุดท้ายเพื่อรับลิงก์เชื่อมต่อแบบแตะเดียว:');
+    Logger.log('1) Deploy → Manage deployments → คัดลอก "Web app URL" (ลงท้ายด้วย /exec)');
+    Logger.log('2) ⚙️ Project Settings → Script Properties → Add property: WEB_APP_URL = URL ที่คัดลอกมา');
+    Logger.log('3) รัน setupToken อีกครั้ง');
   }
   return t;
 }
