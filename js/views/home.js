@@ -57,7 +57,7 @@ registerActions({
       const list = (r.picks || []).map(x => ({ p: store.findPerfumeByName(x.name), reason: x.reason })).filter(x => x.p).slice(0, 3);
       picks = { list: list.length ? list : localPicks({ weather, occasion }), tip: r.tip, source: list.length ? 'ai' : 'local' };
     } catch (e) {
-      toast('AI ไม่ตอบ: ' + e.message + ' (ใช้แบบในเครื่องแทน)', 3000);
+      toast('AI ไม่ตอบ (ใช้แบบในเครื่องแทน): ' + e.message, 6000);
       picks = { list: localPicks({ weather, occasion }), source: 'local' };
     } finally { loadingAi = false; refreshPicks(); }
   },

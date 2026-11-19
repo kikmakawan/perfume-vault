@@ -13,6 +13,10 @@ const FIELDS = ['name', 'brand', 'brandGroup', 'format', 'category', 'volume', '
 function val(root, k) { const el = root.querySelector(`[name="${k}"]`); return el ? el.value.trim() : ''; }
 function setVal(root, k, v) { const el = root.querySelector(`[name="${k}"]`); if (el && v !== undefined && v !== null) el.value = v; }
 
+function aiError(err) {
+  confirmDialog({ emoji: '😵', title: 'AI ใช้ไม่ได้', text: `<div style="text-align:left;font-size:.8rem;word-break:break-word">${esc(err.message)}</div>`, ok: 'โอเค', cancel: 'ปิด' });
+}
+
 function needAi() {
   if (!isConfigured()) { toast('ต้องเชื่อม Google Sheet ก่อน (ตั้งค่า) ถึงจะใช้ AI ได้'); return false; }
   if (!isOnline()) { toast('AI ต้องใช้อินเทอร์เน็ตนะ'); return false; }
@@ -150,7 +154,7 @@ export function render({ params, query }) {
         try {
           const res = await ai('vision', { image: picB64, mime: 'image/jpeg', hint: [val(root, 'brand'), val(root, 'name')].filter(Boolean).join(' ') });
           await applyAi(root, res, ['name', 'brand', 'brandGroup', 'format', 'category', 'topNotes', 'midNotes', 'baseNotes', 'volume', 'batchCode']);
-        } catch (err) { toast('AI อ่านรูปไม่สำเร็จ: ' + err.message, 3000); }
+        } catch (err) { aiError(err); }
         finally { btn.disabled = false; btn.textContent = '✨ ให้ AI อ่านจากรูป'; }
       });
 
@@ -161,7 +165,7 @@ export function render({ params, query }) {
         try {
           const res = await ai('identify', { name: val(root, 'name'), brand: val(root, 'brand'), format: val(root, 'format') });
           await applyAi(root, res, ['brand', 'brandGroup', 'category', 'topNotes', 'midNotes', 'baseNotes']);
-        } catch (err) { toast('AI ไม่ตอบ: ' + err.message, 3000); }
+        } catch (err) { aiError(err); }
         finally { btn.disabled = false; btn.textContent = '✨ AI'; }
       });
 
@@ -183,7 +187,7 @@ export function render({ params, query }) {
           } else {
             confirmDialog({ emoji: '🤷', title: 'ถอดรหัสไม่ได้', text: esc(r.explain || 'แบรนด์นี้ไม่มีรูปแบบรหัสที่รู้จัก'), ok: 'โอเค', cancel: 'ปิด' });
           }
-        } catch (err) { toast('ถอดรหัสไม่สำเร็จ: ' + err.message, 3000); }
+        } catch (err) { aiError(err); }
         finally { btn.disabled = false; btn.textContent = '📸 ถอดรหัส'; }
       });
 

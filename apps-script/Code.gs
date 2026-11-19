@@ -291,7 +291,7 @@ function extractJson_(text) {
 function gemini_(contents, opts) {
   opts = opts || {};
   var apiKey = getApiKey_();
-  var lastError = '';
+  var errors = [];
   for (var i = 0; i < GEMINI_MODELS.length; i++) {
     var model = GEMINI_MODELS[i];
     var modes = opts.search ? [true, false] : [false];
@@ -305,7 +305,12 @@ function gemini_(contents, opts) {
           method: 'post', contentType: 'application/json', headers: { 'x-goog-api-key': apiKey },
           payload: JSON.stringify(payload), muteHttpExceptions: true
         });
-        if (res.getResponseCode() !== 200) { lastError = model + ' (' + res.getResponseCode() + '): ' + res.getContentText().substring(0, 200); continue; }
+        if (res.getResponseCode() !== 200) {
+          var msg = res.getContentText();
+          try { msg = JSON.parse(msg).error.message; } catch (x) {}
+          errors.push(model + (modes[j] ? '+search' : '') + ' [' + res.getResponseCode() + ']: ' + String(msg).substring(0, 160));
+          continue;
+        }
         var json = JSON.parse(res.getContentText());
         var cand = json.candidates && json.candidates[0];
         var text = ((cand && cand.content && cand.content.parts) || []).map(function (p) { return p.text || ''; }).join('');
@@ -321,10 +326,11 @@ function gemini_(contents, opts) {
           });
         }
         return data;
-      } catch (e) { lastError = model + ': ' + e.message; }
+      } catch (e) { errors.push(model + (modes[j] ? '+search' : '') + ': ' + e.message); }
     }
   }
-  throw new Error('AI ไม่ตอบสนอง: ' + lastError);
+  Logger.log(errors.join('\n'));
+  throw new Error('AI ไม่ตอบสนอง — ' + errors.join(' | '));
 }
 
 function textPart_(t) { return { text: t }; }
@@ -422,6 +428,19 @@ function checkAvailableModels() {
   (JSON.parse(res.getContentText()).models || []).forEach(function (m) {
     if ((m.supportedGenerationMethods || []).indexOf('generateContent') > -1) Logger.log('✅ ' + m.name.replace('models/', ''));
   });
+}
+
+/** ทดสอบ AI (ดูผลใน Execution log) — ใช้หาสาเหตุเวลา AI ใช้ไม่ได้ */
+function testAI() {
+  var key = PropertiesService.getScriptProperties().getProperty('GEMINI_API_KEY');
+  Logger.log('GEMINI_API_KEY: ' + (key ? 'มีแล้ว (' + key.substring(0, 6) + '…, ยาว ' + key.length + ' ตัว)' : '❌ ยังไม่ได้ตั้ง'));
+  Logger.log('APP_TOKEN: ' + (PropertiesService.getScriptProperties().getProperty('APP_TOKEN') ? 'มีแล้ว' : '❌ ยังไม่ได้ตั้ง (รัน setupToken)'));
+  try {
+    var r = ai_({ task: 'identify', name: 'Khamrah', brand: 'Lattafa', format: 'EDP' });
+    Logger.log('✅ AI ใช้ได้! รุ่น: ' + r._meta.model + ' → ' + r.topNotes);
+  } catch (e) {
+    Logger.log('❌ ' + e.message);
+  }
 }
 
 /** ทดสอบอ่านข้อมูล (ดูใน Execution log) */
