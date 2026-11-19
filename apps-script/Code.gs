@@ -15,7 +15,12 @@
  */
 var SHEET_ID = '1LR2Wp-Kae79HtyuL1Ncx_G4TJfXu2ycd0PKkmcSMu00';
 var DRIVE_FOLDER_ID = '1PfmaLj_wcMtNhie9_-W1lF7GLCMWA8Nv';
-var GEMINI_MODELS = ['gemini-3.5-flash', 'gemini-flash-latest', 'gemini-2.5-flash'];
+// เรียงจากตัวที่อยากใช้ก่อน (เปลี่ยนได้โดยไม่ต้องแก้โค้ด: ตั้ง Script Property GEMINI_MODELS เช่น "gemini-3.8-flash,gemini-3.5-flash")
+var GEMINI_MODELS = ['gemini-3.8-flash', 'gemini-3.5-flash', 'gemini-flash-latest', 'gemini-3.1-flash-lite'];
+function models_() {
+  var p = PropertiesService.getScriptProperties().getProperty('GEMINI_MODELS');
+  return p ? p.split(',').map(function (x) { return x.trim(); }).filter(String) : GEMINI_MODELS;
+}
 var API_VERSION = '2.0';
 
 // key ในแอป ↔ คอลัมน์ในชีต
@@ -292,9 +297,13 @@ function gemini_(contents, opts) {
   opts = opts || {};
   var apiKey = getApiKey_();
   var errors = [];
-  for (var i = 0; i < GEMINI_MODELS.length; i++) {
-    var model = GEMINI_MODELS[i];
-    var modes = opts.search ? [true, false] : [false];
+  var cache = CacheService.getScriptCache();
+  // ถ้าโควตาค้นเว็บ (Google Search) เต็ม จะข้ามการค้นเว็บไป 1 ชม. เพื่อไม่ให้เสียเวลารอ
+  var searchOk = opts.search && !cache.get('search_quota_out');
+  var list = models_();
+  for (var i = 0; i < list.length; i++) {
+    var model = list[i];
+    var modes = searchOk ? [true, false] : [false];
     var useThinkCfg = true;
     for (var j = 0; j < modes.length; j++) {
       var payload = { contents: contents, generationConfig: { temperature: opts.temperature || 0.3 } };
@@ -316,7 +325,9 @@ function gemini_(contents, opts) {
           errors.push(model + (modes[j] ? '+search' : '') + ' [' + code + ']: ' + String(msg).substring(0, 160));
           if (code === 400 && /API key/i.test(msg)) throw new Error('API key ไม่ถูกต้อง: ' + msg); // คีย์ผิด ลองรุ่นอื่นก็ไม่ช่วย
           if (code === 400 && /think/i.test(msg) && useThinkCfg) { useThinkCfg = false; j--; continue; } // รุ่นนี้ไม่รองรับการตั้งค่า thinking → ลองใหม่แบบไม่ตั้ง
+          if (code === 429 && modes[j]) { searchOk = false; cache.put('search_quota_out', '1', 3600); continue; } // โควตาค้นเว็บหมด → ไม่ค้นแล้ว
           if (code === 404 || code === 403) break;  // รุ่นนี้ใช้ไม่ได้ ข้ามไปรุ่นถัดไปเลย
+          if (code === 429 || code === 503) break;  // รุ่นนี้เต็ม/คนใช้เยอะ → ไปรุ่นถัดไป
           continue;
         }
         var json = JSON.parse(res.getContentText());
@@ -342,7 +353,8 @@ function gemini_(contents, opts) {
     }
   }
   Logger.log(errors.join('\n'));
-  throw new Error('AI ไม่ตอบสนอง — ' + errors.join(' | '));
+  var busy = errors.some(function (e) { return /\[(503|429)\]/.test(e); });
+  throw new Error((busy ? 'ตอนนี้ Gemini มีคนใช้เยอะหรือโควตาเต็ม ลองใหม่อีกสักครู่นะ — ' : 'AI ไม่ตอบสนอง — ') + errors.join(' | '));
 }
 
 function textPart_(t) { return { text: t }; }
@@ -433,6 +445,9 @@ function ai_(p) {
 // =======================================================
 //  UTILITIES (รันเองจาก Editor)
 // =======================================================
+/** ล้างสถานะ "โควตาค้นเว็บเต็ม" (ถ้าอยากให้ลองค้นเว็บใหม่ทันที) */
+function resetSearchQuotaFlag() { CacheService.getScriptCache().remove('search_quota_out'); Logger.log('ล้างแล้ว'); }
+
 function checkAvailableModels() {
   var res = UrlFetchApp.fetch('https://generativelanguage.googleapis.com/v1beta/models', {
     headers: { 'x-goog-api-key': getApiKey_() }, muteHttpExceptions: true
