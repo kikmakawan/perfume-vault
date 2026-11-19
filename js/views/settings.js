@@ -8,7 +8,7 @@ import { esc, toast, confirmDialog, timeAgo, todayStr } from '../util.js';
 import { CITIES, getLocation, setLocation, useGps } from '../weather.js';
 import { parseConnectLink, connectWith } from './welcome.js';
 
-export const APP_VERSION = '2.1.0';
+export const APP_VERSION = '2.2.0';
 
 function applyTheme(t) {
   localStorage.setItem('pv_theme', t);
@@ -31,7 +31,7 @@ registerActions({
   setTheme: (d, el) => { applyTheme(d.v); el.parentElement.querySelectorAll('.chip-btn').forEach(b => b.classList.toggle('active', b === el)); },
   useGps: async () => { try { const l = await useGps(); toast('📍 ใช้ตำแหน่งปัจจุบันแล้ว'); go('settings?t=' + Date.now()); } catch (e) { toast(e.message); } },
   exportJson: () => {
-    const data = { app: 'Perfume Vault', version: APP_VERSION, exportedAt: new Date().toISOString(), perfumes: store.state.perfumes.map(p => { const o = { ...p }; delete o.picLocal; return o; }), wishlist: store.state.wishlist, wears: store.state.wears };
+    const data = { app: 'Perfume Vault', version: APP_VERSION, exportedAt: new Date().toISOString(), perfumes: store.state.perfumes.map(p => { const o = { ...p }; delete o.picLocal; return o; }), wishlist: store.state.wishlist, wears: store.state.wears, testers: store.state.testers };
     download(`perfume-vault-${todayStr()}.json`, JSON.stringify(data, null, 2), 'application/json');
   },
   exportCsv: () => { download(`perfumes-${todayStr()}.csv`, toCsv(store.state.perfumes), 'text/csv'); download(`wears-${todayStr()}.csv`, toCsv(store.state.wears), 'text/csv'); },
@@ -40,7 +40,7 @@ registerActions({
     inp.onchange = async () => {
       try {
         const data = JSON.parse(await inp.files[0].text());
-        const n = (data.perfumes || []).length + (data.wishlist || []).length + (data.wears || []).length;
+        const n = ['perfumes', 'wishlist', 'wears', 'testers'].reduce((s2, k) => s2 + (data[k] || []).length, 0);
         if (!n) return toast('ไฟล์นี้ไม่มีข้อมูล');
         if (!await confirmDialog({ emoji: '📥', title: `นำเข้า ${n} รายการ?`, text: 'รายการที่ UID ซ้ำจะถูกแทนที่ และจะซิงค์ขึ้น Google Sheet ด้วย', ok: 'นำเข้า' })) return;
         await store.importAll(data); toast('📥 นำเข้าเรียบร้อย');

@@ -41,6 +41,7 @@ export function render({ params, query }) {
   picB64 = null;
 
   let p = editing ? { ...editing } : { status: STATUS.rotation, format: 'EDP', purchaseDate: todayStr() };
+  if (!editing && query.name) p = { ...p, name: query.name, brand: query.brand || '', price: query.price || '', volume: query.volume || '', status: STATUS.sealed };
   if (!editing && query.from) {
     const w = store.find('wishlist', query.from);
     if (w) p = { ...p, name: w.name, brand: w.brand, brandGroup: w.brandGroup, format: w.format || 'EDP', category: w.category, topNotes: w.topNotes, midNotes: w.midNotes, baseNotes: w.baseNotes, status: STATUS.sealed, _fromWish: w.uid };

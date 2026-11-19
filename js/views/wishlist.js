@@ -1,5 +1,6 @@
 // 💖 Wishlist + ราคาเป้าหมาย + บันทึกราคาที่เจอ
 import * as store from '../store.js';
+import { topTabs } from './testers.js';
 import { registerActions, go } from '../nav.js';
 import { esc, scoreRing, money, num, openSheet, toast, confirmDialog, todayStr, thDate, isBlank, FORMATS } from '../util.js';
 
@@ -83,7 +84,7 @@ export function render() {
   const W = store.state.wishlist.filter(w => w.status !== 'ซื้อแล้ว');
   const sumTarget = W.reduce((s, w) => s + (num(w.targetPrice) || num((lowest(w) || {}).price)), 0);
   const html = `
-    <div class="top-tabs"><a href="#/vault" class="">🧴 ตู้ของฉัน</a><a href="#/wishlist" class="on">💖 Wishlist</a></div>
+    ${topTabs('wish')}
     <div class="grid2 mb">
       <div class="stat t-pink"><div class="stat-num">${W.length}</div><div class="stat-label">รายการที่เล็งไว้</div></div>
       <div class="stat t-lilac"><div class="stat-num">${sumTarget ? '฿' + money(sumTarget) : '-'}</div><div class="stat-label">ถ้าซื้อครบ (ตามเป้า)</div></div>

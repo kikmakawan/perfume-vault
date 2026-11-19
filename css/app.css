@@ -450,3 +450,35 @@ code { background: var(--soft); padding: 1px 6px; border-radius: 6px; font-size:
 .confetti { position: fixed; inset: 0; pointer-events: none; z-index: 400; overflow: hidden; }
 .confetti span { position: absolute; top: -40px; animation-name: fall; animation-timing-function: cubic-bezier(.25,.6,.4,1); animation-fill-mode: forwards; }
 @keyframes fall { to { transform: translate(var(--dx), 105vh) rotate(var(--rot)); opacity: .2; } }
+
+/* ============================================================
+   v2.2 — เครื่องมือ
+   ============================================================ */
+.top-tabs a small { font-size: .7rem; opacity: .85; }
+.fit { display: flex; align-items: center; gap: 8px; margin-top: 4px; }
+.fit .sim-bar { flex: 1; margin: 0; background: var(--soft); height: 7px; }
+.fit small { font-size: .72rem; color: var(--muted); min-width: 32px; text-align: right; }
+.p-img.sm { width: 48px; height: 48px; border-radius: 14px; }
+.season-row { padding: 8px 0; border-bottom: 1px dashed var(--line); }
+.season-row:last-child { border-bottom: none; }
+.season-hero { text-align: center; }
+.star-row { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
+.star-b { text-align: center; text-decoration: none; color: var(--ink); min-width: 0; }
+.star-b img { width: 100%; aspect-ratio: 1; object-fit: cover; border-radius: 18px; background: var(--lilac-soft); }
+.star-b b { display: block; font-size: .78rem; margin-top: 4px; }
+.star-b small { font-size: .7rem; color: var(--mint-ink); }
+.pack .p-img { width: 64px; height: 64px; }
+.trip-wx { background: var(--grad-2); color: #23445A; }
+.trip-wx .sub { color: #3B5C70; }
+.df-hero { background: linear-gradient(135deg, #A9CFFF 0%, #C4AEFF 100%); }
+.df-alert { background: #FFE9EE; color: #C2405F; }
+[data-theme="dark"] .df-alert { background: #4A2333; color: #FFB3C6; }
+.df-price .big-num { font-size: 1.6rem; }
+.verdict-ok { margin-top: 8px; background: var(--mint-soft); color: var(--mint-ink); border-radius: 12px; padding: 8px 10px; font-size: .84rem; font-weight: 500; }
+.verdict-no { margin-top: 8px; background: var(--pink-soft); color: var(--pink-ink); border-radius: 12px; padding: 8px 10px; font-size: .84rem; font-weight: 500; }
+.scent-map text { pointer-events: none; font-family: Prompt, sans-serif; }
+.scent-map circle { transition: r .15s; }
+.tester-photo { width: 76px; height: 76px; border-radius: 20px; border: 2px dashed var(--line); background: var(--soft); font-size: 1.6rem; flex-shrink: 0; overflow: hidden; padding: 0; }
+.tester-photo img { width: 100%; height: 100%; object-fit: cover; }
+.tester-ph { display: grid; place-items: center; font-size: 2rem; }
+.season-nudge { background: linear-gradient(135deg, var(--peach-soft), var(--lemon-soft)); }

@@ -24,7 +24,7 @@ function models_(smartFirst) {
   if (p) return p.split(',').map(function (x) { return x.trim(); }).filter(String);
   return smartFirst ? GEMINI_SMART.concat(GEMINI_FAST) : GEMINI_FAST.concat(GEMINI_SMART);
 }
-var API_VERSION = '2.1';
+var API_VERSION = '2.2';
 var APP_PAGE = 'https://kikmakawan.github.io/perfume-vault/'; // ที่อยู่แอปบน GitHub Pages
 
 // key ในแอป ↔ คอลัมน์ในชีต
@@ -54,6 +54,14 @@ var SCHEMA = {
     extra: [['uid', 'UID'], ['perfumeUid', 'PerfumeUID'], ['perfumeName', 'PerfumeName'], ['date', 'Date'], ['occasion', 'Occasion'],
       ['weather', 'Weather'], ['tempC', 'TempC'], ['longevity', 'LongevityH'], ['compliments', 'Compliments'],
       ['sprays', 'Sprays'], ['note', 'Note'], ['updatedAt', 'UpdatedAt']],
+    dates: ['date']
+  },
+  testers: {
+    sheetName: 'Testers',
+    fixed: [], fixedHeaders: [],
+    extra: [['uid', 'UID'], ['name', 'Name'], ['brand', 'Brand'], ['format', 'Format'], ['date', 'Date'], ['where', 'Where'],
+      ['rating', 'Rating'], ['verdict', 'Verdict'], ['longevity', 'LongevityH'], ['notes', 'Notes'], ['topNotes', 'TopNotes'],
+      ['midNotes', 'MidNotes'], ['baseNotes', 'BaseNotes'], ['category', 'Category'], ['price', 'Price'], ['pic', 'Pic'], ['updatedAt', 'UpdatedAt']],
     dates: ['date']
   }
 };
@@ -231,6 +239,7 @@ function pullAll_() {
     perfumes: readAll_('perfumes'),
     wishlist: readAll_('wishlist'),
     wears: readAll_('wears'),
+    testers: readAll_('testers'),
     serverTime: new Date().toISOString()
   };
 }

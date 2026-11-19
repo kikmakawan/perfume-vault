@@ -1,7 +1,7 @@
 // IndexedDB แบบเรียบง่าย — เก็บข้อมูลทั้งหมดไว้ในเครื่อง
 const DB_NAME = 'perfume-vault';
-const DB_VER = 1;
-export const STORES = ['perfumes', 'wishlist', 'wears', 'outbox', 'meta'];
+const DB_VER = 2;
+export const STORES = ['perfumes', 'wishlist', 'wears', 'testers', 'outbox', 'meta'];
 
 let dbp = null;
 function open() {
@@ -10,7 +10,7 @@ function open() {
     const req = indexedDB.open(DB_NAME, DB_VER);
     req.onupgradeneeded = () => {
       const db = req.result;
-      ['perfumes', 'wishlist', 'wears'].forEach(s => { if (!db.objectStoreNames.contains(s)) db.createObjectStore(s, { keyPath: 'uid' }); });
+      ['perfumes', 'wishlist', 'wears', 'testers'].forEach(s => { if (!db.objectStoreNames.contains(s)) db.createObjectStore(s, { keyPath: 'uid' }); });
       if (!db.objectStoreNames.contains('outbox')) db.createObjectStore('outbox', { keyPath: 'seq', autoIncrement: true });
       if (!db.objectStoreNames.contains('meta')) db.createObjectStore('meta', { keyPath: 'key' });
     };

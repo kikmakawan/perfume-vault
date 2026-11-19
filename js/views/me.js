@@ -38,6 +38,14 @@ export function render() {
       ${row('#/wrapped', '🎁', `Wrapped ${new Date().getFullYear()}`, 'สรุปทั้งปีแบบสตอรี่ แชร์ลง IG ได้', 't-peach')}
       ${row('#/badges', '🏅', 'เหรียญรางวัล', `ปลดล็อกแล้ว ${done} จาก ${B.length}`, 't-mint')}
     </div>
+    <div class="section-label">🧰 เครื่องมือ</div>
+    <div class="menu">
+      ${row('#/travel', '✈️', 'จัดกระเป๋าไปเที่ยว', 'ดูอากาศปลายทาง แล้วเลือกขวดให้', 't-sky')}
+      ${row('#/season', '🍂', 'สลับขวดตามฤดู', 'ขวดไหนควรเอาออกมา ขวดไหนพักไว้', 't-peach')}
+      ${row('#/dutyfree', '🛫', 'โหมดดิวตี้ฟรี', 'เช็คซ้ำ แปลงราคา เทียบราคาต่อ ml', 't-lemon')}
+      ${row('#/map', '🗺️', 'แผนที่กลิ่น', 'ดูทั้งตู้บนแผนที่ สายไหนเยอะ สายไหนขาด', 't-lilac')}
+      ${row('#/testers', '🧫', 'สมุดเทสเตอร์', `${store.state.testers.length} ขวดที่เคยลอง`, 't-mint')}
+    </div>
     <div class="menu">
       ${row('#/settings', '⚙️', 'ตั้งค่า', isConfigured() ? 'เชื่อม Google Sheet แล้ว · ธีม · สำรองข้อมูล' : '⚠️ ยังไม่ได้เชื่อม Google Sheet', 't-sky')}
       ${row('#/welcome', '🌷', 'ดูวิธีใช้อีกครั้ง', 'ทัวร์แอปสั้นๆ 30 วินาที', '')}

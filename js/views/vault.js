@@ -1,5 +1,6 @@
 // 🧴 ตู้น้ำหอม: รายการ / ชั้นวาง + ค้นหา + ตัวกรอง
 import * as store from '../store.js';
+import { topTabs } from './testers.js';
 import { registerActions } from '../nav.js';
 import { esc, imgTag, money, stars, statusKey, STATUS_UI, debounce, norm, isBlank, num, openSheet, GROUPS, daysUntil } from '../util.js';
 import { wearIndex, perfumeStats, wornToday } from '../analytics.js';
@@ -130,7 +131,7 @@ registerActions({
 
 export function render() {
   const html = `
-    <div class="top-tabs"><a href="#/vault" class="on">🧴 ตู้ของฉัน</a><a href="#/wishlist" class="">💖 Wishlist</a></div>
+    ${topTabs('vault')}
     <div class="search-row">
       <div class="search-box"><span>🔍</span><input type="search" id="vq" placeholder="ชื่อ แบรนด์ โน้ต แท็ก..." value="${esc(F.q)}"></div>
       <button class="sq-btn" data-act="vaultFilters">⚙️<span class="count-pill" id="fCount" hidden></span></button>

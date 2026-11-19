@@ -54,7 +54,7 @@ registerActions({
   chatClear: () => { chat = []; saveChat(); redrawChat(); }
 });
 
-export function renderChat() {
+export function renderChat({ query = {} } = {}) {
   const tools = `<div class="ai-tools">
       <a href="#/purchase" class="t-pink"><span>🛒</span>ก่อนซื้อ</a>
       <a href="#/layer" class="t-peach"><span>🧪</span>Layering</a>
@@ -69,6 +69,7 @@ export function renderChat() {
     html, title: 'ผู้ช่วย AI', tab: 'ai', live: false,
     mount: (root) => {
       window.scrollTo(0, document.body.scrollHeight);
+      if (query.q && !chat.some(m => m.text === query.q)) { history.replaceState(null, '', '#/ai'); sendChat(query.q); }
       root.querySelector('#chatForm').addEventListener('submit', (e) => {
         e.preventDefault(); const i = root.querySelector('#chatIn'); const t = i.value; i.value = ''; sendChat(t);
       });

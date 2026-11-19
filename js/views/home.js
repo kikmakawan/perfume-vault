@@ -7,6 +7,8 @@ import { localPicks, alerts, streak, buildContext, recentWearsText, dna } from '
 import { getWeather, weatherText } from '../weather.js';
 import { quickWear } from './diary.js';
 import { vaultCard } from '../share.js';
+import { seasonSuggestions } from './tools.js';
+import { SEASONS, thaiSeason } from '../scent.js';
 
 let occasion = localStorage.getItem('pv_last_occ') || 'daily';
 let picks = null; // { list:[{p, reason}], tip, source }
@@ -115,6 +117,9 @@ export function render() {
             <div class="grow"><b>${esc(p.name)}</b><div class="sub">แตะเพื่อเพิ่มความติดทน / คำชม</div></div><span>✏️</span></div>`; }).join('')}
       </div>` : ''}
 
+    ${(() => { const k = thaiSeason(); const sg = seasonSuggestions(k); const n = sg.bring.filter(r => r.sk === 'sealed').length;
+      return n ? `<a class="card flex season-nudge" href="#/season" style="text-decoration:none;color:inherit;gap:12px"><div style="font-size:2rem">${SEASONS[k].e}</div>
+        <div class="grow"><b>เข้า${SEASONS[k].th}แล้ว</b><div class="sub">มี ${n} ขวดที่ยังไม่แกะ และเหมาะกับช่วงนี้มาก</div></div><span class="chev">›</span></a>` : ''; })()}
     ${al.length ? `
       <div class="card"><div class="card-head">🔔 เรื่องที่ควรรู้</div>
         ${al.map(a => `<a class="alert-item" href="#/p/${esc(a.p.uid)}" style="text-decoration:none;color:inherit">

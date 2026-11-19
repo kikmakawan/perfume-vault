@@ -16,6 +16,8 @@ import * as insights from './views/insights.js';
 import * as settings from './views/settings.js';
 import * as me from './views/me.js';
 import * as welcome from './views/welcome.js';
+import * as tools from './views/tools.js';
+import * as testers from './views/testers.js';
 import { runEnrich } from './enrich.js';
 import { checkBadges } from './fx.js';
 
@@ -26,7 +28,8 @@ const ROUTES = [
   ['ai', aiv.renderChat], ['chat', aiv.renderChat], ['purchase', aiv.renderPurchase], ['layer', aiv.renderLayer], ['dupe', aiv.renderDupe],
   ['wishlist', wish.render], ['wish/:id', wish.renderOne],
   ['dna', insights.renderDna], ['stats', insights.renderStats], ['wrapped', insights.renderWrapped], ['badges', insights.renderBadges],
-  ['settings', settings.render]
+  ['settings', settings.render],
+  ['travel', tools.renderTravel], ['season', tools.renderSeason], ['dutyfree', tools.renderDutyFree], ['map', tools.renderMap], ['testers', testers.render]
 ];
 
 // ---------- actions (data-act) ----------
@@ -85,7 +88,7 @@ let rerenderT;
 const badgeCheck = (() => { let t; return () => { clearTimeout(t); t = setTimeout(checkBadges, 900); }; })();
 store.subscribe((what) => {
   updateHeader();
-  if (['perfumes', 'wears', 'wishlist'].includes(what)) badgeCheck();
+  if (['perfumes', 'wears', 'wishlist', 'testers'].includes(what)) badgeCheck();
   if (['outbox', 'sync', 'net'].includes(what)) { if (current && current.liveSync) scheduleRerender(); return; }
   if (current && current.live !== false) scheduleRerender();
 });

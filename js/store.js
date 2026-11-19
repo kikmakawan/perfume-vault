@@ -2,8 +2,8 @@
 import * as db from './db.js';
 import { uid, nowIso, norm } from './util.js';
 
-export const state = { perfumes: [], wishlist: [], wears: [], outboxCount: 0, ready: false };
-export const ENTITIES = ['perfumes', 'wishlist', 'wears'];
+export const state = { perfumes: [], wishlist: [], wears: [], testers: [], outboxCount: 0, ready: false };
+export const ENTITIES = ['perfumes', 'wishlist', 'wears', 'testers'];
 
 // ---------- events ----------
 const listeners = new Set();
@@ -15,8 +15,9 @@ export const hooks = { afterEnqueue: () => {} };
 export const inflight = new Set();
 
 export async function load() {
-  const [p, w, r, o] = await Promise.all(ENTITIES.map(e => db.all(e)).concat([db.all('outbox')]));
-  state.perfumes = p; state.wishlist = w; state.wears = r; state.outboxCount = o.length;
+  const res = await Promise.all(ENTITIES.map(e => db.all(e)).concat([db.all('outbox')]));
+  ENTITIES.forEach((e, i) => { state[e] = res[i]; });
+  state.outboxCount = res[res.length - 1].length;
   state.ready = true;
   emit('all');
 }
@@ -90,7 +91,8 @@ export async function remove(entity, id) {
 export async function applyServer(data) {
   const pending = await db.all('outbox');
   for (const ent of ENTITIES) {
-    const map = new Map((data[ent] || []).map(r => [r.uid, r]));
+    if (!Array.isArray(data[ent])) continue; // เซิร์ฟเวอร์เวอร์ชันเก่ายังไม่มีตารางนี้ → เก็บของในเครื่องไว้
+    const map = new Map(data[ent].map(r => [r.uid, r]));
     for (const op of pending) {
       if (op.entity !== ent) continue;
       if (op.kind === 'delete') map.delete(op.uid);
@@ -115,7 +117,7 @@ export async function importAll(data) {
 
 export async function wipeLocal() {
   for (const s of [...ENTITIES, 'outbox']) await db.clear(s);
-  state.perfumes = []; state.wishlist = []; state.wears = []; state.outboxCount = 0;
+  ENTITIES.forEach(e => { state[e] = []; }); state.outboxCount = 0;
   emit('all');
 }
 

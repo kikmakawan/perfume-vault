@@ -1,5 +1,5 @@
 /* Perfume Vault service worker — ทำให้เปิดแอปได้แม้ไม่มีเน็ต */
-const VERSION = 'pv-2.1.0';
+const VERSION = 'pv-2.2.0';
 const SHELL = `${VERSION}-shell`;
 const RUNTIME = `${VERSION}-runtime`;
 const IMAGES = 'pv-images'; // แยกไว้ ไม่ล้างตอนอัปเดตเวอร์ชัน
@@ -11,7 +11,7 @@ const SHELL_FILES = [
   './js/analytics.js', './js/charts.js', './js/share.js', './js/weather.js',
   './js/views/home.js', './js/views/vault.js', './js/views/detail.js', './js/views/form.js',
   './js/views/diary.js', './js/views/ai.js', './js/views/wishlist.js',
-  './js/views/insights.js', './js/views/settings.js', './js/views/me.js', './js/views/welcome.js', './js/enrich.js', './js/fx.js'
+  './js/views/insights.js', './js/views/settings.js', './js/views/me.js', './js/views/welcome.js', './js/enrich.js', './js/fx.js', './js/scent.js', './js/views/tools.js', './js/views/testers.js'
 ];
 
 self.addEventListener('install', (e) => {
