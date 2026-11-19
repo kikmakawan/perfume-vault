@@ -39,4 +39,4 @@ export async function call(action, payload = {}, { timeout = 90000 } = {}) {
   return json.data;
 }
 
-export const ai = (task, params = {}) => call('ai', { task, ...params });
+export const ai = (task, params = {}) => call('ai', { task, ...params }, { timeout: 180000 });

@@ -1,5 +1,5 @@
 /* Perfume Vault service worker — ทำให้เปิดแอปได้แม้ไม่มีเน็ต */
-const VERSION = 'pv-2.0.1';
+const VERSION = 'pv-2.0.2';
 const SHELL = `${VERSION}-shell`;
 const RUNTIME = `${VERSION}-runtime`;
 const IMAGES = 'pv-images'; // แยกไว้ ไม่ล้างตอนอัปเดตเวอร์ชัน

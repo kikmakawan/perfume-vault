@@ -308,7 +308,10 @@ function gemini_(contents, opts) {
         if (res.getResponseCode() !== 200) {
           var msg = res.getContentText();
           try { msg = JSON.parse(msg).error.message; } catch (x) {}
-          errors.push(model + (modes[j] ? '+search' : '') + ' [' + res.getResponseCode() + ']: ' + String(msg).substring(0, 160));
+          var code = res.getResponseCode();
+          errors.push(model + (modes[j] ? '+search' : '') + ' [' + code + ']: ' + String(msg).substring(0, 160));
+          if (code === 400 && /API key/i.test(msg)) throw new Error('API key ไม่ถูกต้อง: ' + msg); // คีย์ผิด ลองรุ่นอื่นก็ไม่ช่วย
+          if (code === 404 || code === 403) break;  // รุ่นนี้ใช้ไม่ได้ ข้ามไปรุ่นถัดไปเลย
           continue;
         }
         var json = JSON.parse(res.getContentText());
@@ -326,7 +329,10 @@ function gemini_(contents, opts) {
           });
         }
         return data;
-      } catch (e) { errors.push(model + (modes[j] ? '+search' : '') + ': ' + e.message); }
+      } catch (e) {
+        if (/^API key ไม่ถูกต้อง/.test(e.message)) throw e;
+        errors.push(model + (modes[j] ? '+search' : '') + ': ' + e.message);
+      }
     }
   }
   Logger.log(errors.join('\n'));
