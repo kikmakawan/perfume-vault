@@ -2,7 +2,7 @@
 import * as store from './store.js';
 import { initSync, sync, syncState } from './sync.js';
 import { isConfigured, isOnline } from './api.js';
-import { $, $$, timeAgo, closeAllSheets } from './util.js';
+import { $, $$, timeAgo, closeAllSheets, toast } from './util.js';
 import { actions, registerActions, go, goBack } from './nav.js';
 
 import * as home from './views/home.js';
@@ -108,6 +108,7 @@ setInterval(updateHeader, 60000);
 function registerSW() {
   if (!('serviceWorker' in navigator) || location.protocol === 'file:') return;
   navigator.serviceWorker.register('./sw.js').then(reg => {
+    reg.update().catch(() => {});
     reg.addEventListener('updatefound', () => {
       const nw = reg.installing;
       nw && nw.addEventListener('statechange', () => {
@@ -125,6 +126,8 @@ function showUpdateBar(worker) {
   bar.querySelector('button').onclick = () => worker.postMessage('skipWaiting');
   document.body.appendChild(bar);
 }
+
+document.addEventListener('pv-toast', (e) => toast(e.detail, 3500));
 
 // ---------- start ----------
 (async function start() {

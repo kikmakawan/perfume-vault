@@ -295,11 +295,15 @@ function gemini_(contents, opts) {
   for (var i = 0; i < GEMINI_MODELS.length; i++) {
     var model = GEMINI_MODELS[i];
     var modes = opts.search ? [true, false] : [false];
+    var useThinkCfg = true;
     for (var j = 0; j < modes.length; j++) {
       var payload = { contents: contents, generationConfig: { temperature: opts.temperature || 0.3 } };
+      // ลดเวลาคิดของโมเดล (ตัวการหลักที่ทำให้ช้า): Gemini 2.5 ใช้ thinkingBudget, Gemini 3.x ใช้ thinkingLevel
+      if (useThinkCfg) payload.generationConfig.thinkingConfig = /^gemini-2\.5/.test(model) ? { thinkingBudget: 0 } : { thinkingLevel: 'low' };
       if (opts.system) payload.systemInstruction = { parts: [{ text: opts.system }] };
       if (modes[j]) payload.tools = [{ google_search: {} }];
       else payload.generationConfig.responseMimeType = 'application/json';
+      var t0 = Date.now();
       try {
         var res = UrlFetchApp.fetch('https://generativelanguage.googleapis.com/v1beta/models/' + model + ':generateContent', {
           method: 'post', contentType: 'application/json', headers: { 'x-goog-api-key': apiKey },
@@ -311,10 +315,12 @@ function gemini_(contents, opts) {
           var code = res.getResponseCode();
           errors.push(model + (modes[j] ? '+search' : '') + ' [' + code + ']: ' + String(msg).substring(0, 160));
           if (code === 400 && /API key/i.test(msg)) throw new Error('API key ไม่ถูกต้อง: ' + msg); // คีย์ผิด ลองรุ่นอื่นก็ไม่ช่วย
+          if (code === 400 && /think/i.test(msg) && useThinkCfg) { useThinkCfg = false; j--; continue; } // รุ่นนี้ไม่รองรับการตั้งค่า thinking → ลองใหม่แบบไม่ตั้ง
           if (code === 404 || code === 403) break;  // รุ่นนี้ใช้ไม่ได้ ข้ามไปรุ่นถัดไปเลย
           continue;
         }
         var json = JSON.parse(res.getContentText());
+        Logger.log(model + (modes[j] ? '+search' : '') + ' ตอบใน ' + ((Date.now() - t0) / 1000).toFixed(1) + ' วินาที');
         var cand = json.candidates && json.candidates[0];
         var text = ((cand && cand.content && cand.content.parts) || []).map(function (p) { return p.text || ''; }).join('');
         var data = extractJson_(text);
