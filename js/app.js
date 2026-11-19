@@ -80,7 +80,14 @@ async function render({ keepScroll = false } = {}) {
   window.scrollTo(0, keepScroll ? y : 0);
 }
 
-window.addEventListener('hashchange', () => { sessionStorage.setItem('pv_nav', '1'); render(); });
+// กันออกจากหน้าที่ยังไม่ได้บันทึก (หน้าที่มี canLeave)
+let lastHash = location.hash, skipGuard = false;
+window.addEventListener('hashchange', async () => {
+  if (skipGuard) { skipGuard = false; lastHash = location.hash; return; }
+  if (current && current.canLeave && !(await current.canLeave())) { skipGuard = true; location.hash = lastHash; return; }
+  lastHash = location.hash;
+  sessionStorage.setItem('pv_nav', '1'); render();
+});
 $('#backBtn').addEventListener('click', () => goBack(current && current.parent || 'home'));
 
 // วาดใหม่เมื่อข้อมูลเปลี่ยน (เฉพาะหน้าที่ไม่มีฟอร์มให้พิมพ์)

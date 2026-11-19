@@ -1,23 +1,49 @@
 // 🔎 หน้ารายละเอียดขวด
 import * as store from '../store.js';
 import { registerActions, go } from '../nav.js';
-import { esc, imgTag, money, stars, statusKey, STATUS, STATUS_UI, isBlank, num, thDate, relDay, occLabel, confirmDialog, toast, debounce, daysUntil, addMonths, todayStr } from '../util.js';
+import { openSheet, esc, imgTag, money, stars, statusKey, STATUS, STATUS_UI, isBlank, num, thDate, relDay, occLabel, confirmDialog, toast, debounce, daysUntil, addMonths, todayStr } from '../util.js';
 import { perfumeStats, paoInfo, mainAxis, wornToday } from '../analytics.js';
 import { openWearSheet } from './diary.js';
 import { perfumeCard } from '../share.js';
 import { queueEnrich, isEnriching } from '../enrich.js';
 
-const saveFill = debounce((id, v) => store.patch('perfumes', id, { fillLevel: v }), 600);
+// ปรับ % ที่เหลือผ่านหน้าต่างยืนยัน (กันนิ้วเผลอไปโดน)
+function openFillSheet(p) {
+  let v = isBlank(p.fillLevel) ? 100 : num(p.fillLevel);
+  const s = openSheet(`<h3>🧪 เหลือในขวดเท่าไหร่?</h3><div class="sub">${esc(p.name)}</div>
+    <div class="fill-big"><span id="fv">${v}</span>%</div>
+    <div class="fill-bottle"><i id="fb" style="height:${v}%"></i></div>
+    <input type="range" min="0" max="100" step="5" value="${v}" id="fr">
+    <div class="chips wrap mt" style="justify-content:center">${[100, 75, 50, 25, 10, 0].map(x => `<button class="chip-btn" data-v="${x}">${x === 100 ? 'เต็มขวด' : x === 0 ? 'หมดแล้ว' : x + '%'}</button>`).join('')}</div>
+    ${num(p.price) ? `<div class="hint center" id="fval">มูลค่าคงเหลือ ฿${money(num(p.price) * v / 100)}</div>` : ''}
+    <div class="row mt"><button class="btn btn-soft" data-close>ยกเลิก</button><button class="btn btn-main" id="fsave">💾 บันทึก</button></div>`);
+  const el = s.el;
+  const set = (x) => {
+    v = Number(x); el.querySelector('#fv').textContent = v; el.querySelector('#fb').style.height = v + '%'; el.querySelector('#fr').value = v;
+    const fv = el.querySelector('#fval'); if (fv) fv.textContent = `มูลค่าคงเหลือ ฿${money(num(p.price) * v / 100)}`;
+  };
+  el.querySelector('#fr').addEventListener('input', e => set(e.target.value));
+  el.querySelectorAll('.chips [data-v]').forEach(b => b.addEventListener('click', () => set(b.dataset.v)));
+  el.querySelector('#fsave').addEventListener('click', async () => {
+    const changes = { fillLevel: v };
+    if (v === 0 && statusKey(p.status) !== 'empty' && await confirmDialog({ emoji: '🫙', title: 'ใช้หมดขวดแล้ว?', text: 'เปลี่ยนสถานะเป็น "หมดแล้ว" ด้วยไหม', ok: 'เปลี่ยนเลย', cancel: 'ยังไม่ต้อง' })) changes.status = STATUS.empty;
+    await store.patch('perfumes', p.uid, changes); s.close(); toast(`🧪 บันทึกแล้ว เหลือ ${v}%`);
+  });
+}
 
 registerActions({
   pStatus: async (d) => {
     const p = store.perfume(d.id); if (!p) return;
+    if (statusKey(p.status) === d.v) return;
+    const label = { rotation: '✨ ใช้อยู่', sealed: '📦 ยังไม่แกะ', empty: '🫙 หมดแล้ว' }[d.v];
+    if (!await confirmDialog({ emoji: '🔄', title: `เปลี่ยนสถานะเป็น "${label}"?`, text: esc(p.name), ok: 'เปลี่ยน' })) return;
     const changes = { status: STATUS[d.v] };
     if (d.v === 'rotation' && !p.openedDate) changes.openedDate = todayStr();   // เริ่มใช้ = แกะวันนี้
     if (d.v === 'empty') changes.fillLevel = 0;
     await store.patch('perfumes', d.id, changes);
     if (d.v === 'empty') toast('🫙 ใช้หมดขวดแล้ว เก่งมาก!');
   },
+  pFill: (d) => { const p = store.perfume(d.id); if (p) openFillSheet(p); },
   pEnrich: (d) => { queueEnrich(d.id); toast('✨ AI กำลังหาโน้ตกลิ่นให้ ไปทำอย่างอื่นก่อนได้เลย'); },
   pWear: (d) => { const p = store.perfume(d.id); if (p) openWearSheet(p); },
   pShare: (d) => { const p = store.perfume(d.id); if (p) perfumeCard(p, perfumeStats(p)); },
@@ -66,8 +92,9 @@ export function render({ params }) {
 
     ${sk !== 'empty' ? `
     <div class="card">
-      <div class="card-head">🧪 เหลือในขวด <span class="sub" id="fillVal">${isBlank(p.fillLevel) ? 'ยังไม่ระบุ' : num(p.fillLevel) + '%'}</span></div>
-      <input type="range" min="0" max="100" step="5" value="${isBlank(p.fillLevel) ? 100 : num(p.fillLevel)}" id="fillRange">
+      <div class="card-head">🧪 เหลือในขวด <span class="sub">${isBlank(p.fillLevel) ? 'ยังไม่ระบุ' : num(p.fillLevel) + '%'}</span></div>
+      <div class="flex" style="gap:12px"><div class="fill-mini grow" style="height:12px;margin:0"><i style="width:${isBlank(p.fillLevel) ? 0 : num(p.fillLevel)}%"></i></div>
+        <button class="btn btn-lilac btn-sm" data-act="pFill" data-id="${esc(p.uid)}">ปรับ</button></div>
       ${!isBlank(p.fillLevel) && num(p.price) ? `<div class="hint">มูลค่าคงเหลือประมาณ ฿${money(num(p.price) * num(p.fillLevel) / 100)}</div>` : ''}
     </div>` : ''}
 
@@ -108,8 +135,7 @@ export function render({ params }) {
   return {
     html, title: p.name, back: true, parent: 'vault', tab: 'vault',
     mount: (root) => {
-      const r = root.querySelector('#fillRange');
-      if (r) r.addEventListener('input', () => { root.querySelector('#fillVal').textContent = r.value + '%'; saveFill(p.uid, Number(r.value)); });
+
     }
   };
 }

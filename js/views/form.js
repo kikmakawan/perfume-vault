@@ -6,6 +6,11 @@ import { queueEnrich } from '../enrich.js';
 import { celebrate } from '../fx.js';
 
 let picB64 = null;
+let formState = { root: null, snap: '', submitted: false, tags: null };
+const serialize = () => {
+  const f = formState.root && formState.root.querySelector('#pForm'); if (!f) return '';
+  return JSON.stringify([...new FormData(f).entries()]) + '|' + [...(formState.tags || [])].join(',') + '|' + (picB64 ? 1 : 0);
+};
 
 const FIELDS = ['name', 'brand', 'brandGroup', 'format', 'category', 'volume', 'topNotes', 'midNotes', 'baseNotes', 'batchCode', 'pao',
   'status', 'mfgDate', 'expDate', 'purchaseDate', 'openedDate', 'location', 'price', 'rating', 'notes', 'fillLevel'];
@@ -131,7 +136,13 @@ export function render({ params, query }) {
 
   return {
     html, title: editing ? 'แก้ไขขวด' : 'เพิ่มขวดใหม่', back: !!editing, parent: editing ? 'p/' + editing.uid : 'vault', tab: 'add', live: false,
+    canLeave: async () => {
+      if (formState.submitted || serialize() === formState.snap) return true;
+      return confirmDialog({ emoji: '📝', title: 'ยังไม่ได้บันทึก', text: 'ออกจากหน้านี้แล้วสิ่งที่แก้ไว้จะหายไป', ok: 'ทิ้งการแก้ไข', cancel: 'อยู่ต่อ', danger: true });
+    },
     mount: (root) => {
+      formState = { root, snap: '', submitted: false, tags };
+      setTimeout(() => { formState.snap = serialize(); }, 0);
       const f = root.querySelector('#pForm');
       const img = root.querySelector('#photoImg'), ph = root.querySelector('.photo-ph');
 
@@ -215,16 +226,20 @@ export function render({ params, query }) {
       });
 
       const range = root.querySelector('[name=fillLevel]');
-      range.addEventListener('input', () => root.querySelector('#fillOut').textContent = range.value + '%');
+      let fillTouched = false;
+      range.addEventListener('input', () => { fillTouched = true; root.querySelector('#fillOut').textContent = range.value + '%'; });
 
       f.addEventListener('submit', async (e) => {
         e.preventDefault();
         if (!val(root, 'name')) { toast('ใส่ชื่อน้ำหอมก่อนนะ'); root.querySelector('[name=name]').focus(); return; }
+        if (editing && !picB64 && serialize() === formState.snap) { formState.submitted = true; toast('ไม่มีอะไรเปลี่ยน'); location.replace('#/p/' + editing.uid); return; }
         const rec = { ...(editing || {}) };
         FIELDS.forEach(k => { rec[k] = val(root, k); });
+        if (!fillTouched && isBlank(p.fillLevel)) rec.fillLevel = '';   // ไม่ได้แตะแถบ = ไม่ตั้งค่าให้เอง
         rec.tags = [...tags].join(', ');
         if (rec.status === STATUS.rotation && !rec.openedDate && !editing) rec.openedDate = todayStr();
         root.querySelector('#saveBtn').disabled = true;
+        formState.submitted = true;
         const saved = await store.save('perfumes', rec, { picB64 });
         if (p._fromWish) await store.patch('wishlist', p._fromWish, { status: 'ซื้อแล้ว' });
         const auto = root.querySelector('#autoAi');
