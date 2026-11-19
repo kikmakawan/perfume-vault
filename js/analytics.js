@@ -153,7 +153,10 @@ export function localPicks({ weather, occasion } = {}, n = 3) {
   const hour = new Date().getHours();
   const temp = weather ? weather.temp : 30;
   const hot = temp >= 29, cool = temp <= 23, night = hour >= 18 || hour < 5, rainy = weather && weather.rainy;
-  const cand = state.perfumes.filter(p => statusKey(p.status) === 'rotation');
+  const today = todayStr();
+  let cand = state.perfumes.filter(p => statusKey(p.status) === 'rotation');
+  const notToday = cand.filter(p => !state.wears.some(w => w.perfumeUid === p.uid && w.date === today));
+  if (notToday.length) cand = notToday; // ไม่แนะนำขวดที่ฉีดไปแล้ววันนี้
   const scored = cand.map(p => {
     const a = perfumeAxes(p); const s = perfumeStats(p, idx);
     let sc = (isBlank(p.rating) ? 3 : num(p.rating)) * 8;

@@ -10,17 +10,20 @@ import * as vault from './views/vault.js';
 import * as detail from './views/detail.js';
 import * as form from './views/form.js';
 import * as diary from './views/diary.js';
-import * as more from './views/more.js';
 import * as aiv from './views/ai.js';
 import * as wish from './views/wishlist.js';
 import * as insights from './views/insights.js';
 import * as settings from './views/settings.js';
+import * as me from './views/me.js';
+import * as welcome from './views/welcome.js';
+import { runEnrich } from './enrich.js';
+import { checkBadges } from './fx.js';
 
 const ROUTES = [
   ['home', home.render], ['vault', vault.render], ['p/:id', detail.render],
   ['add', form.render], ['edit/:id', form.render],
-  ['diary', diary.render], ['more', more.render],
-  ['chat', aiv.renderChat], ['purchase', aiv.renderPurchase], ['layer', aiv.renderLayer], ['dupe', aiv.renderDupe],
+  ['diary', diary.render], ['more', me.render], ['me', me.render], ['welcome', welcome.render],
+  ['ai', aiv.renderChat], ['chat', aiv.renderChat], ['purchase', aiv.renderPurchase], ['layer', aiv.renderLayer], ['dupe', aiv.renderDupe],
   ['wishlist', wish.render], ['wish/:id', wish.renderOne],
   ['dna', insights.renderDna], ['stats', insights.renderStats], ['wrapped', insights.renderWrapped], ['badges', insights.renderBadges],
   ['settings', settings.render]
@@ -79,8 +82,10 @@ $('#backBtn').addEventListener('click', () => goBack(current && current.parent |
 
 // วาดใหม่เมื่อข้อมูลเปลี่ยน (เฉพาะหน้าที่ไม่มีฟอร์มให้พิมพ์)
 let rerenderT;
+const badgeCheck = (() => { let t; return () => { clearTimeout(t); t = setTimeout(checkBadges, 900); }; })();
 store.subscribe((what) => {
   updateHeader();
+  if (['perfumes', 'wears', 'wishlist'].includes(what)) badgeCheck();
   if (['outbox', 'sync', 'net'].includes(what)) { if (current && current.liveSync) scheduleRerender(); return; }
   if (current && current.live !== false) scheduleRerender();
 });
@@ -135,8 +140,22 @@ document.addEventListener('pv-toast', (e) => toast(e.detail, 3500));
   await store.load();
   await initSync();
   updateHeader();
+
+  // ลิงก์เชื่อมต่อแบบแตะเดียว: …/#/connect?u=<exec url>&t=<token>
+  let connected = false;
+  if (location.hash.startsWith('#/connect')) {
+    const cfg = welcome.parseConnectLink(location.hash);
+    history.replaceState(null, '', '#/home');
+    if (cfg) { localStorage.setItem('pv_welcomed', '1'); connected = await welcome.connectWith(cfg); }
+  } else if (!localStorage.getItem('pv_welcomed') && !store.state.perfumes.length && !isConfigured()) {
+    history.replaceState(null, '', '#/welcome');
+  }
+
   await render();
   registerSW();
-  sync();
+  if (!connected) await sync();
+  runEnrich();
+  checkBadges();
+  window.addEventListener('online', () => setTimeout(runEnrich, 2500));
   if (navigator.storage && navigator.storage.persist) navigator.storage.persist().catch(() => {});
 })();

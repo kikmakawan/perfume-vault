@@ -24,7 +24,8 @@ function models_(smartFirst) {
   if (p) return p.split(',').map(function (x) { return x.trim(); }).filter(String);
   return smartFirst ? GEMINI_SMART.concat(GEMINI_FAST) : GEMINI_FAST.concat(GEMINI_SMART);
 }
-var API_VERSION = '2.0';
+var API_VERSION = '2.1';
+var APP_PAGE = 'https://kikmakawan.github.io/perfume-vault/'; // ที่อยู่แอปบน GitHub Pages
 
 // key ในแอป ↔ คอลัมน์ในชีต
 // fixed = คอลัมน์ตามตำแหน่งเดิม (เข้ากับข้อมูลเก่า), extra = หาจากชื่อหัวคอลัมน์ ถ้าไม่มีจะสร้างต่อท้ายให้
@@ -97,6 +98,14 @@ function setupToken() {
     props.setProperty('APP_TOKEN', t);
   }
   Logger.log('APP_TOKEN ของคุณคือ: ' + t);
+  var url = '';
+  try { url = ScriptApp.getService().getUrl() || ''; } catch (e) {}
+  if (url && /\/exec$/.test(url)) {
+    Logger.log('⚡ ลิงก์เชื่อมต่อ (คัดลอกไปเปิดบนมือถือ หรือวางในหน้าตั้งค่าของแอป):');
+    Logger.log(APP_PAGE + '#/connect?u=' + encodeURIComponent(url) + '&t=' + t);
+  } else {
+    Logger.log('ℹ️ ยังไม่ได้ Deploy เป็น Web app — Deploy ก่อน แล้วรัน setupToken อีกครั้งเพื่อรับลิงก์เชื่อมต่อแบบแตะเดียว');
+  }
   return t;
 }
 

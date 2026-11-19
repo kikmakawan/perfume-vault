@@ -39,11 +39,11 @@ export async function call(action, payload = {}, { timeout = 90000 } = {}) {
   return json.data;
 }
 
-export async function ai(task, params = {}) {
-  // แจ้งความคืบหน้า ให้รู้ว่า AI ยังทำงานอยู่
-  const notify = (msg) => { try { document.dispatchEvent(new CustomEvent('pv-toast', { detail: msg })); } catch (e) {} };
+export async function ai(task, params = {}, { quiet = false } = {}) {
+  // แจ้งความคืบหน้า ให้รู้ว่า AI ยังทำงานอยู่ (งานเบื้องหลังไม่ต้องแจ้ง)
+  const notify = (msg) => { if (quiet) return; try { document.dispatchEvent(new CustomEvent('pv-toast', { detail: msg })); } catch (e) {} };
   const t1 = setTimeout(() => notify('🧠 AI กำลังคิดอยู่ ใกล้เสร็จแล้ว...'), 15000);
-  const t2 = setTimeout(() => notify('⏳ ยังทำงานอยู่นะ (ค้นข้อมูลจากเว็บ) รออีกนิด'), 45000);
+  const t2 = setTimeout(() => notify('⏳ ยังทำงานอยู่นะ Gemini ช่วงนี้คนใช้เยอะ รออีกนิด'), 45000);
   try { return await call('ai', { task, ...params }, { timeout: 300000 }); }
   finally { clearTimeout(t1); clearTimeout(t2); }
 }

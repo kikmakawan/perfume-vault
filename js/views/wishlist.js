@@ -83,6 +83,7 @@ export function render() {
   const W = store.state.wishlist.filter(w => w.status !== 'ซื้อแล้ว');
   const sumTarget = W.reduce((s, w) => s + (num(w.targetPrice) || num((lowest(w) || {}).price)), 0);
   const html = `
+    <div class="top-tabs"><a href="#/vault" class="">🧴 ตู้ของฉัน</a><a href="#/wishlist" class="on">💖 Wishlist</a></div>
     <div class="grid2 mb">
       <div class="stat t-pink"><div class="stat-num">${W.length}</div><div class="stat-label">รายการที่เล็งไว้</div></div>
       <div class="stat t-lilac"><div class="stat-num">${sumTarget ? '฿' + money(sumTarget) : '-'}</div><div class="stat-label">ถ้าซื้อครบ (ตามเป้า)</div></div>
@@ -92,7 +93,7 @@ export function render() {
     </div>
     <div class="row mb"><button class="btn btn-soft btn-sm" data-act="wishAdd">＋ เพิ่มเอง</button><a class="btn btn-lilac btn-sm" href="#/purchase">🛒 วิเคราะห์ก่อนซื้อ</a></div>
     <div id="wishList"></div>`;
-  return { html, title: 'Wishlist', back: true, parent: 'more', tab: 'more', mount: draw };
+  return { html, title: 'Wishlist', tab: 'vault', mount: draw };
 }
 
 export function renderOne({ params }) {
@@ -128,5 +129,5 @@ export function renderOne({ params }) {
     </div>
     ${bought ? `<button class="btn btn-soft btn-block" data-act="wishUndo" data-id="${esc(w.uid)}">↩️ ยังไม่ได้ซื้อ</button>`
       : `<button class="btn btn-main btn-block" data-act="wishBought" data-id="${esc(w.uid)}">🛍️ ซื้อแล้ว!</button>`}`;
-  return { html, title: w.name, back: true, parent: 'wishlist', tab: 'more' };
+  return { html, title: w.name, back: true, parent: 'wishlist', tab: 'vault' };
 }

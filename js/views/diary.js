@@ -5,6 +5,7 @@ import { esc, imgTag, openSheet, toast, todayStr, OCCASIONS, occLabel, relDay, s
 import { heatmap, streak, bestStreak, wornToday } from '../analytics.js';
 import { heatmapHtml } from '../charts.js';
 import { getWeather } from '../weather.js';
+import { haptic, confetti } from '../fx.js';
 
 let lastOccasion = localStorage.getItem('pv_last_occ') || 'daily';
 
@@ -16,6 +17,7 @@ export async function quickWear(p) {
   }
   const wx = await getWeather();
   await store.logWear(p, { occasion: lastOccasion, weather: wx ? `${wx.emoji} ${wx.text}` : '', tempC: wx ? wx.temp : '' });
+  haptic([8, 30, 8]); confetti({ count: 18, emojis: ['💖', '✨', '🫧'] });
   toast(`💖 บันทึกว่าวันนี้ฉีด ${p.name} แล้ว`);
 }
 
@@ -66,7 +68,8 @@ export async function openWearSheet(p, wear = null) {
     };
     if (rec.occasion) { lastOccasion = rec.occasion; localStorage.setItem('pv_last_occ', rec.occasion); }
     await store.save('wears', rec);
-    s.close(); toast(wear ? 'อัปเดตบันทึกแล้ว ✨' : '💖 บันทึกการฉีดแล้ว');
+    s.close(); haptic(10); if (!wear) confetti({ count: 18, emojis: ['💖', '✨', '🫧'] });
+    toast(wear ? 'อัปเดตบันทึกแล้ว ✨' : '💖 บันทึกการฉีดแล้ว');
   });
   const del = el.querySelector('#wDel');
   if (del) del.addEventListener('click', async () => {
@@ -145,5 +148,5 @@ export function render({ query }) {
         }).join('')}
       </div>`).join('') + (W.length > diaryLimit ? `<button class="btn btn-soft btn-block" data-act="diaryMore">ดูเพิ่ม</button>` : '')
     : `<div class="empty"><div class="big">📔</div>ยังไม่มีบันทึก<br>กด "ฉีดวันนี้" ที่ขวดไหนก็ได้ เพื่อเริ่มเก็บสถิติ</div>`}`;
-  return { html, title: 'สมุดบันทึกการฉีด', tab: 'diary' };
+  return { html, title: 'สมุดบันทึกการฉีด', tab: 'me', back: true, parent: 'me' };
 }

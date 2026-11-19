@@ -36,7 +36,7 @@ export function renderDna() {
       <div class="sec-text">คุณยังมีขวดสาย <b>${esc([...d.axes].sort((a, b) => a.v - b.v)[0].th)}</b> น้อยที่สุด ถ้าอยากเปิดโลกกลิ่นใหม่ ลองให้ AI แนะนำดู</div>
       <a class="btn btn-lilac btn-sm mt" href="#/chat">💬 ถาม AI</a>
     </div>`;
-  return { html, title: 'DNA กลิ่นของฉัน', back: true, parent: 'more', tab: 'more' };
+  return { html, title: 'DNA กลิ่นของฉัน', back: true, parent: 'me', tab: 'me' };
 }
 
 // =======================================================
@@ -84,7 +84,7 @@ export function renderStats() {
       ${idle.length ? idle.map(x => row(x, '฿' + money(x.p.price) + ` · ${x.s.wears} ครั้ง`)).join('') : '<div class="sub">ไม่มี เยี่ยมมาก! 👏</div>'}</div>
     <div class="card"><div class="card-head">🛍️ ซื้อจากที่ไหนบ่อย</div>${hbars(count('location').filter(e => e[0] !== 'ไม่ระบุ').slice(0, 6))}</div>
     <div class="card"><div class="card-head">🌸 หมวดกลิ่น</div>${hbars(count('category').filter(e => e[0] !== 'ไม่ระบุ').slice(0, 8))}</div>`;
-  return { html, title: 'สถิติ & งบ', back: true, parent: 'more', tab: 'more' };
+  return { html, title: 'สถิติ & งบ', back: true, parent: 'me', tab: 'me' };
 }
 
 // =======================================================
@@ -123,7 +123,7 @@ registerActions({
   wNext: () => { wIdx++; drawWrapped(); },
   wPrev: () => { wIdx--; drawWrapped(); },
   wShare: () => wData && wrappedCard(wData),
-  wClose: () => go('more')
+  wClose: () => go('me')
 });
 
 export function renderWrapped({ query }) {
@@ -136,7 +136,7 @@ export function renderWrapped({ query }) {
     <div class="nav-zone"><div data-act="wPrev"></div><div data-act="wNext"></div></div>
     <div class="foot"><button data-act="wPrev" style="flex:0 0 56px;background:rgba(255,255,255,.3);color:#fff">‹</button><button data-act="wShare">📸 แชร์</button><button data-act="wNext" style="flex:0 0 56px">›</button></div>
   </div>`;
-  return { html, title: 'Wrapped ' + year, back: true, parent: 'more', tab: 'more', live: false, mount: drawWrapped };
+  return { html, title: 'Wrapped ' + year, back: true, parent: 'me', tab: 'me', live: false, mount: drawWrapped };
 }
 
 // =======================================================
@@ -152,5 +152,5 @@ export function renderBadges() {
       <div class="badge ${b.done ? '' : 'locked'}"><span class="e">${b.e}</span><b>${esc(b.title)}</b><small>${esc(b.desc)}</small>
         ${b.done ? '<small style="color:var(--mint-ink)">✓ สำเร็จ</small>' : `<div class="prog"><i style="width:${b.cur / b.target * 100}%"></i></div><small>${b.cur}/${b.target}</small>`}</div>`).join('')}
     </div>`;
-  return { html, title: 'เหรียญรางวัล', back: true, parent: 'more', tab: 'more' };
+  return { html, title: 'เหรียญรางวัล', back: true, parent: 'me', tab: 'me' };
 }

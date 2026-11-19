@@ -130,6 +130,7 @@ registerActions({
 
 export function render() {
   const html = `
+    <div class="top-tabs"><a href="#/vault" class="on">🧴 ตู้ของฉัน</a><a href="#/wishlist" class="">💖 Wishlist</a></div>
     <div class="search-row">
       <div class="search-box"><span>🔍</span><input type="search" id="vq" placeholder="ชื่อ แบรนด์ โน้ต แท็ก..." value="${esc(F.q)}"></div>
       <button class="sq-btn" data-act="vaultFilters">⚙️<span class="count-pill" id="fCount" hidden></span></button>

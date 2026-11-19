@@ -6,8 +6,9 @@ import { getConfig, setConfig, call, isConfigured } from '../api.js';
 import { sync, syncState } from '../sync.js';
 import { esc, toast, confirmDialog, timeAgo, todayStr } from '../util.js';
 import { CITIES, getLocation, setLocation, useGps } from '../weather.js';
+import { parseConnectLink, connectWith } from './welcome.js';
 
-export const APP_VERSION = '2.0.5';
+export const APP_VERSION = '2.1.0';
 
 function applyTheme(t) {
   localStorage.setItem('pv_theme', t);
@@ -69,11 +70,14 @@ export function render() {
     <div class="card">
       <div class="card-head">🔗 เชื่อมกับ Google Sheet ${isConfigured() ? '<span class="tag mint" style="margin-left:auto">เชื่อมแล้ว</span>' : ''}</div>
       <div class="sub">ใส่ URL ของ Apps Script (Deploy เป็น Web app) และรหัส APP_TOKEN ดูวิธีตั้งค่าได้ใน README</div>
+      <label class="lbl">⚡ วิธีง่าย: วางลิงก์เชื่อมต่อจาก setupToken</label>
+      <div class="input-btn"><input class="inp" id="magic" placeholder="https://…/#/connect?u=…&t=…" autocapitalize="off"><button class="btn btn-main btn-sm" id="magicBtn" type="button">เชื่อม</button></div>
+      <details class="mt"><summary class="sub">หรือกรอกเอง</summary>
       <form id="cfg">
         <label class="lbl">Web app URL</label><input class="inp" name="url" value="${esc(c.url)}" placeholder="https://script.google.com/macros/s/.../exec" inputmode="url" autocapitalize="off">
         <label class="lbl">APP_TOKEN</label><input class="inp" name="token" value="${esc(c.token)}" type="password" autocapitalize="off" autocomplete="off">
         <button class="btn btn-main btn-block mt" id="cfgBtn">🔌 ทดสอบ & บันทึก</button>
-      </form>
+      </form></details>
       ${isConfigured() ? `<div class="kv mt"><span>ซิงค์ล่าสุด</span><b>${esc(timeAgo(syncState.lastSync))}</b></div><div class="kv"><span>รอซิงค์</span><b>${store.state.outboxCount} รายการ</b></div>
         ${syncState.lastError ? `<div class="kv"><span>ข้อผิดพลาดล่าสุด</span><b style="color:var(--rose)">${esc(syncState.lastError)}</b></div>` : ''}` : ''}
     </div>
@@ -108,7 +112,7 @@ export function render() {
     <div class="center sub mt">Perfume Vault v${APP_VERSION} · ทำด้วย 💖</div>`;
 
   return {
-    html, title: 'ตั้งค่า', back: true, parent: 'more', tab: 'more', live: false,
+    html, title: 'ตั้งค่า', back: true, parent: 'me', tab: 'me', live: false,
     mount: (root) => {
       root.querySelector('#cfg').addEventListener('submit', async (e) => {
         e.preventDefault();
@@ -126,6 +130,12 @@ export function render() {
         } catch (err) {
           setConfig(old); toast('❌ ' + err.message, 4000);
         } finally { btn.disabled = false; btn.textContent = '🔌 ทดสอบ & บันทึก'; }
+      });
+      root.querySelector('#magicBtn').addEventListener('click', async (e) => {
+        const cfg = parseConnectLink(root.querySelector('#magic').value);
+        if (!cfg) return toast('ลิงก์ไม่ถูกต้อง ลองคัดลอกใหม่จาก log ของ setupToken');
+        e.currentTarget.disabled = true;
+        if (await connectWith(cfg)) go('settings?ok=' + Date.now()); else e.currentTarget.disabled = false;
       });
       root.querySelector('#citySel').addEventListener('change', (e) => { const c2 = CITIES[Number(e.target.value)]; if (c2) { setLocation(c2); toast('📍 ' + c2.name); } });
       const ib = root.querySelector('#installBtn');

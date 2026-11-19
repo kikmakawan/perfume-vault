@@ -38,6 +38,7 @@ registerActions({
   setOcc: (d, el) => {
     occasion = d.v; localStorage.setItem('pv_last_occ', occasion);
     el.parentElement.querySelectorAll('.chip-btn').forEach(b => b.classList.toggle('active', b === el));
+    if (!picks || picks.source === 'local') { picks = { list: localPicks({ weather, occasion }), source: 'local' }; refreshPicks(); }
   },
   pickLocal: () => {
     picks = { list: localPicks({ weather, occasion }), source: 'local' };
@@ -71,6 +72,16 @@ registerActions({
 
 export function render() {
   const P = store.state.perfumes;
+  // แนะนำทันทีที่เปิดแอป ไม่ต้องกดอะไร
+  if (!picks && P.some(p => statusKey(p.status) === 'rotation')) picks = { list: localPicks({ weather, occasion }), source: 'local', auto: true };
+  if (!P.length) return {
+    html: `<div class="page-title" style="margin-bottom:10px">${greeting().join(' ')}</div>
+      <div class="hero center"><div style="font-size:3rem">🧴</div><div class="hero-title">มาเริ่มสร้างตู้น้ำหอมกัน!</div>
+        <div class="hero-sub" style="margin:6px 0 14px">ถ่ายรูปขวดแรกของคุณ แล้ว AI จะกรอกข้อมูลให้เอง</div>
+        <div class="hero-btns"><button onclick="location.hash='#/add'">📸 เพิ่มขวดแรก</button></div></div>
+      ${!isConfigured() ? `<a class="card setup-card flex" href="#/welcome?s=1" style="text-decoration:none;gap:12px"><div style="font-size:2rem">🔗</div><div class="grow"><b>มีข้อมูลในชีตอยู่แล้ว?</b><div style="font-size:.8rem">เชื่อม Google Sheet เพื่อดึงข้อมูลเดิมมาทั้งหมด</div></div><div>›</div></a>` : ''}`,
+    title: 'Perfume Vault', tab: 'home'
+  };
   const [hello, e] = greeting();
   const todayWears = store.state.wears.filter(w => w.date === todayStr());
   const al = alerts().slice(0, 5);
@@ -92,8 +103,8 @@ export function render() {
       <div class="chips">${OCCASIONS.map(([k, l]) => `<button class="chip-btn ${k === occasion ? 'active' : ''}" data-act="setOcc" data-v="${k}">${l}</button>`).join('')}</div>
       <div id="picksArea">${picksHtml()}</div>
       <div class="hero-btns">
-        <button data-act="pickLocal">🎲 สุ่มแบบฉลาด</button>
-        <button class="ghost" data-act="pickAi">✨ ให้ AI เลือก</button>
+        <button data-act="pickLocal">🎲 สุ่มใหม่</button>
+        <button class="ghost" data-act="pickAi">✨ ให้ AI ช่วยเลือก</button>
       </div>
     </div>
 
@@ -120,9 +131,7 @@ export function render() {
     </div>
 
     <div class="hub">
-      <a href="#/dna" class="t-lilac"><span class="e">🧬</span><div><b>DNA กลิ่น</b><small>คุณเป็นสายไหน?</small></div></a>
-      <a href="#/wrapped" class="t-pink"><span class="e">🎁</span><div><b>Wrapped ${new Date().getFullYear()}</b><small>สรุปทั้งปี</small></div></a>
-      <a href="#/badges" class="t-lemon"><span class="e">🏅</span><div><b>เหรียญรางวัล</b><small>${store.state.perfumes.length ? 'ดูความสำเร็จ' : 'เริ่มสะสม'}</small></div></a>
+      <a href="#/diary" class="t-lilac"><span class="e">📔</span><div><b>สมุดบันทึก</b><small>ปฏิทินความหอม</small></div></a>
       <a href="#" data-act="shareVault" class="t-mint"><span class="e">📸</span><div><b>แชร์ตู้ของฉัน</b><small>การ์ดสำหรับ IG Story</small></div></a>
     </div>`;
 
@@ -131,6 +140,7 @@ export function render() {
     mount: async () => {
       if (!weather) {
         weather = await getWeather();
+        if (picks && picks.auto && weather) { picks = { list: localPicks({ weather, occasion }), source: 'local', auto: true }; refreshPicks(); }
         const pill = document.getElementById('wxPill');
         if (pill) pill.textContent = weather ? `${weather.emoji} ${weather.temp}° ${weather.text} · ${weather.place}${weather.stale ? ' (ข้อมูลเก่า)' : ''}` : '🌡️ ไม่มีข้อมูลอากาศ (ออฟไลน์)';
       }

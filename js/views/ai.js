@@ -55,12 +55,18 @@ registerActions({
 });
 
 export function renderChat() {
-  const html = `${guard()}
-    <div class="flex between mb"><span class="sub">ประวัติแชทเก็บไว้ในเครื่องนี้</span>${chat.length ? '<button class="btn-ghost" data-act="chatClear">🧹 ล้างแชท</button>' : ''}</div>
+  const tools = `<div class="ai-tools">
+      <a href="#/purchase" class="t-pink"><span>🛒</span>ก่อนซื้อ</a>
+      <a href="#/layer" class="t-peach"><span>🧪</span>Layering</a>
+      <a href="#/dupe" class="t-sky"><span>🔍</span>หา Dupe</a>
+      <a href="#/home" class="t-lilac"><span>🎯</span>เลือกให้วันนี้</a>
+    </div>`;
+  const html = `${guard()}${tools}
+    <div class="flex between mb"><span class="sub">💬 คุยกับผู้ช่วยที่รู้จักตู้ของคุณทุกขวด</span>${chat.length ? '<button class="btn-ghost" data-act="chatClear">🧹 ล้างแชท</button>' : ''}</div>
     <div class="chat-wrap" id="chatWrap">${bubbles()}</div>
-    <form class="chat-input" id="chatForm"><input class="inp" id="chatIn" placeholder="พิมพ์คำถาม..." autocomplete="off"><button class="btn btn-main">ส่ง</button></form>`;
+    <form class="chat-input" id="chatForm"><input class="inp" id="chatIn" placeholder="ถามอะไรก็ได้ เช่น เดทเย็นนี้ใส่อะไรดี" autocomplete="off"><button class="btn btn-main">ส่ง</button></form>`;
   return {
-    html, title: 'คุยกับตู้น้ำหอม', back: true, parent: 'more', tab: 'more', live: false,
+    html, title: 'ผู้ช่วย AI', tab: 'ai', live: false,
     mount: (root) => {
       window.scrollTo(0, document.body.scrollHeight);
       root.querySelector('#chatForm').addEventListener('submit', (e) => {
@@ -127,7 +133,7 @@ export function renderPurchase({ query }) {
     </form>
     <div id="paOut">${purchaseResult(lastPurchase)}</div>`;
   return {
-    html, title: 'ช่วยคิดก่อนซื้อ', back: true, parent: 'more', tab: 'more', live: false,
+    html, title: 'ช่วยคิดก่อนซื้อ', back: true, parent: 'ai', tab: 'ai', live: false,
     mount: (root) => {
       root.querySelector('#paForm').addEventListener('submit', async (e) => {
         e.preventDefault();
@@ -184,7 +190,7 @@ export function renderLayer({ query }) {
         <button class="btn btn-main btn-block mt" data-act="layerRun">✨ หาคู่ Layering</button>`
       : `<button class="btn btn-main btn-block" data-act="layerPick">เลือกขวดหลัก</button>`}
     </div><div id="lyOut">${layerResult()}</div>`;
-  return { html, title: 'Layering', back: true, parent: 'more', tab: 'more', live: false };
+  return { html, title: 'Layering', back: true, parent: 'ai', tab: 'ai', live: false };
 }
 
 // =======================================================
@@ -215,7 +221,7 @@ export function renderDupe({ query }) {
       <button class="btn btn-main btn-block mt" id="dpBtn">🔍 หา Dupe</button>
     </form><div id="dpOut">${dupeResult()}</div>`;
   return {
-    html, title: 'หา Dupe', back: true, parent: 'more', tab: 'more', live: false,
+    html, title: 'หา Dupe', back: true, parent: 'ai', tab: 'ai', live: false,
     mount: (root) => {
       root.querySelector('#dpForm').addEventListener('submit', async (e) => {
         e.preventDefault();

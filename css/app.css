@@ -385,3 +385,68 @@ input[type=range]::-moz-range-thumb { width: 22px; height: 22px; border-radius: 
 .price-row { display: flex; justify-content: space-between; font-size: .82rem; padding: 6px 0; border-bottom: 1px dashed var(--line); }
 .update-bar { position: fixed; left: 50%; transform: translateX(-50%); bottom: calc(96px + env(safe-area-inset-bottom)); z-index: 90; background: var(--ink); color: var(--bg); border-radius: 16px; padding: 10px 14px; font-size: .84rem; display: flex; gap: 10px; align-items: center; box-shadow: var(--shadow); }
 .update-bar button { border: none; background: var(--lilac); color: #fff; border-radius: 10px; padding: 6px 10px; font-weight: 600; }
+
+/* ============================================================
+   v2.1 — ใช้ง่ายขึ้น + ลูกเล่น
+   ============================================================ */
+/* top tabs (ตู้ / Wishlist) */
+.top-tabs { display: flex; background: var(--card); border-radius: 18px; padding: 4px; margin-bottom: 12px; box-shadow: var(--shadow-sm); }
+.top-tabs a { flex: 1; text-align: center; padding: 9px 6px; border-radius: 14px; text-decoration: none; color: var(--muted); font-weight: 500; font-size: .88rem; }
+.top-tabs a.on { background: var(--grad); color: #fff; box-shadow: 0 4px 12px rgba(196,174,255,.35); }
+
+/* add form */
+.add-hero { text-align: center; }
+.star-pick { display: flex; gap: 2px; }
+.star-pick button { border: none; background: none; font-size: 1.7rem; line-height: 1; color: var(--line); padding: 4px 2px; transition: transform .12s, color .12s; }
+.star-pick button.on { color: #F5B83D; }
+.star-pick button:active { transform: scale(1.25); }
+.toggle-row { display: flex; align-items: center; gap: 12px; background: var(--lilac-soft); border-radius: 16px; padding: 12px 14px; cursor: pointer; }
+.toggle-row > span:first-child { flex: 1; font-size: .86rem; line-height: 1.35; }
+details.fold { padding: 0; overflow: hidden; }
+details.fold > summary { list-style: none; cursor: pointer; padding: 16px; font-weight: 600; display: flex; align-items: center; gap: 8px; }
+details.fold > summary::-webkit-details-marker { display: none; }
+details.fold > summary .sub { margin-left: auto; font-weight: 400; }
+details.fold > summary::after { content: '⌄'; color: var(--muted); transition: transform .2s; }
+details.fold[open] > summary::after { transform: rotate(180deg); }
+details.fold > :not(summary) { margin-left: 16px; margin-right: 16px; }
+details.fold > :last-child { margin-bottom: 16px; }
+.save-bar { position: sticky; bottom: calc(92px + env(safe-area-inset-bottom)); z-index: 5; padding-top: 6px; }
+.save-bar .btn { box-shadow: 0 10px 24px rgba(196,174,255,.5); }
+
+/* AI tools */
+.ai-tools { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; margin-bottom: 14px; }
+.ai-tools a { border-radius: 18px; padding: 12px 4px; text-align: center; text-decoration: none; color: var(--ink); font-size: .74rem; font-weight: 500; box-shadow: var(--shadow-sm); }
+.ai-tools a span { display: block; font-size: 1.5rem; margin-bottom: 2px; }
+
+/* ของฉัน */
+.me-head { text-align: center; background: var(--grad); color: #fff; border-radius: var(--r-xl); padding: 22px 16px 16px; margin-bottom: 14px; box-shadow: 0 14px 30px rgba(196,174,255,.35); }
+.me-head .sub { color: rgba(255,255,255,.9); }
+.me-emoji { font-size: 2.8rem; }
+.me-title { font-family: 'Mali'; font-size: 1.3rem; font-weight: 700; }
+.me-stats { display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; margin-top: 14px; background: rgba(255,255,255,.22); border-radius: 18px; padding: 10px 4px; }
+.me-stats b { display: block; font-family: 'Mali'; font-size: 1.15rem; }
+.me-stats small { font-size: .68rem; opacity: .9; }
+.menu { background: var(--card); border-radius: var(--r-lg); box-shadow: var(--shadow); margin-bottom: 14px; overflow: hidden; }
+.menu-row { display: flex; align-items: center; gap: 12px; padding: 12px 14px; text-decoration: none; color: var(--ink); border-bottom: 1px solid var(--line); }
+.menu-row:last-child { border-bottom: none; }
+.menu-row:active { background: var(--soft); }
+.menu-ic { width: 40px; height: 40px; border-radius: 14px; display: grid; place-items: center; font-size: 1.25rem; flex-shrink: 0; background: var(--soft); }
+.menu-row b { display: block; font-size: .92rem; }
+.menu-row small { display: block; font-size: .74rem; color: var(--muted); }
+.chev { color: var(--muted); font-size: 1.3rem; }
+
+/* welcome */
+.welcome { padding-top: 10px; }
+.welcome-e { font-size: 4.2rem; text-align: center; animation: bounce .6s cubic-bezier(.3,1.6,.5,1); }
+.welcome-pts { display: flex; flex-direction: column; gap: 10px; margin: 8px 0; }
+.welcome-pts div { background: var(--card); border-radius: 16px; padding: 12px 14px; box-shadow: var(--shadow-sm); font-size: .9rem; }
+.card .welcome-pts div { box-shadow: none; background: var(--soft); }
+.dots-step { display: flex; justify-content: center; gap: 6px; margin-bottom: 6px; }
+.dots-step i { width: 8px; height: 8px; border-radius: 99px; background: var(--line); transition: all .2s; }
+.dots-step i.on { width: 24px; background: var(--lilac); }
+code { background: var(--soft); padding: 1px 6px; border-radius: 6px; font-size: .85em; }
+
+/* confetti */
+.confetti { position: fixed; inset: 0; pointer-events: none; z-index: 400; overflow: hidden; }
+.confetti span { position: absolute; top: -40px; animation-name: fall; animation-timing-function: cubic-bezier(.25,.6,.4,1); animation-fill-mode: forwards; }
+@keyframes fall { to { transform: translate(var(--dx), 105vh) rotate(var(--rot)); opacity: .2; } }

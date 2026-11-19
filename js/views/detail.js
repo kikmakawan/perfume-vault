@@ -5,6 +5,7 @@ import { esc, imgTag, money, stars, statusKey, STATUS, STATUS_UI, isBlank, num, 
 import { perfumeStats, paoInfo, mainAxis, wornToday } from '../analytics.js';
 import { openWearSheet } from './diary.js';
 import { perfumeCard } from '../share.js';
+import { queueEnrich, isEnriching } from '../enrich.js';
 
 const saveFill = debounce((id, v) => store.patch('perfumes', id, { fillLevel: v }), 600);
 
@@ -17,6 +18,7 @@ registerActions({
     await store.patch('perfumes', d.id, changes);
     if (d.v === 'empty') toast('🫙 ใช้หมดขวดแล้ว เก่งมาก!');
   },
+  pEnrich: (d) => { queueEnrich(d.id); toast('✨ AI กำลังหาโน้ตกลิ่นให้ ไปทำอย่างอื่นก่อนได้เลย'); },
   pWear: (d) => { const p = store.perfume(d.id); if (p) openWearSheet(p); },
   pShare: (d) => { const p = store.perfume(d.id); if (p) perfumeCard(p, perfumeStats(p)); },
   pDelete: async (d) => {
@@ -75,7 +77,8 @@ export function render({ params }) {
         ${p.topNotes ? `<div class="pyr top"><b>TOP · กลิ่นแรก</b>${esc(p.topNotes)}</div>` : ''}
         ${p.midNotes ? `<div class="pyr mid"><b>HEART · กลิ่นกลาง</b>${esc(p.midNotes)}</div>` : ''}
         ${p.baseNotes ? `<div class="pyr base"><b>BASE · กลิ่นติดผิว</b>${esc(p.baseNotes)}</div>` : ''}
-      </div>` : `<div class="sub">ยังไม่มีข้อมูลโน้ต <a href="#/edit/${esc(p.uid)}">แตะเพื่อให้ AI ช่วยเติม</a></div>`}
+      </div>` : isEnriching(p.uid) ? `<div class="sub"><span class="typing"><i></i><i></i><i></i></span> AI กำลังหาโน้ตกลิ่นให้อยู่เบื้องหลัง เดี๋ยวจะขึ้นเอง</div>`
+        : `<div class="sub mb">ยังไม่มีข้อมูลโน้ต</div><button class="btn btn-lilac btn-sm" data-act="pEnrich" data-id="${esc(p.uid)}">✨ ให้ AI เติมโน้ตกลิ่น</button>`}
       ${tags.length ? `<div class="tags mt">${tags.map(t => `<span class="tag lilac">#${esc(t)}</span>`).join('')}</div>` : ''}
     </div>
 
