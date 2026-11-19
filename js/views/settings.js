@@ -7,7 +7,7 @@ import { sync, syncState } from '../sync.js';
 import { esc, toast, confirmDialog, timeAgo, todayStr } from '../util.js';
 import { CITIES, getLocation, setLocation, useGps } from '../weather.js';
 
-export const APP_VERSION = '2.0.4';
+export const APP_VERSION = '2.0.5';
 
 function applyTheme(t) {
   localStorage.setItem('pv_theme', t);

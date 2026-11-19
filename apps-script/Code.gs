@@ -16,10 +16,13 @@
 var SHEET_ID = '1LR2Wp-Kae79HtyuL1Ncx_G4TJfXu2ycd0PKkmcSMu00';
 var DRIVE_FOLDER_ID = '1PfmaLj_wcMtNhie9_-W1lF7GLCMWA8Nv';
 // เรียงจากตัวที่อยากใช้ก่อน (เปลี่ยนได้โดยไม่ต้องแก้โค้ด: ตั้ง Script Property GEMINI_MODELS เช่น "gemini-3.8-flash,gemini-3.5-flash")
-var GEMINI_MODELS = ['gemini-3.8-flash', 'gemini-3.5-flash', 'gemini-flash-latest', 'gemini-3.1-flash-lite'];
-function models_() {
+// FAST = รุ่นเล็กที่ตอบไว (ใช้กับงานส่วนใหญ่) | SMART = รุ่นที่ฉลาดกว่า ใช้เป็นตัวสำรอง
+var GEMINI_FAST = ['gemini-3.1-flash-lite', 'gemini-flash-lite-latest'];
+var GEMINI_SMART = ['gemini-3.8-flash', 'gemini-3.5-flash', 'gemini-flash-latest'];
+function models_(smartFirst) {
   var p = PropertiesService.getScriptProperties().getProperty('GEMINI_MODELS');
-  return p ? p.split(',').map(function (x) { return x.trim(); }).filter(String) : GEMINI_MODELS;
+  if (p) return p.split(',').map(function (x) { return x.trim(); }).filter(String);
+  return smartFirst ? GEMINI_SMART.concat(GEMINI_FAST) : GEMINI_FAST.concat(GEMINI_SMART);
 }
 var API_VERSION = '2.0';
 
@@ -299,8 +302,10 @@ function gemini_(contents, opts) {
   var errors = [];
   var cache = CacheService.getScriptCache();
   // ถ้าโควตาค้นเว็บ (Google Search) เต็ม จะข้ามการค้นเว็บไป 1 ชม. เพื่อไม่ให้เสียเวลารอ
-  var searchOk = opts.search && !cache.get('search_quota_out');
-  var list = models_();
+  // การค้นเว็บทำให้ช้าขึ้นมาก จึงปิดไว้เป็นค่าเริ่มต้น (เปิดได้ด้วย Script Property AI_SEARCH = 1)
+  var searchOn = PropertiesService.getScriptProperties().getProperty('AI_SEARCH') === '1';
+  var searchOk = opts.search && searchOn && !cache.get('search_quota_out');
+  var list = models_(opts.smart);
   for (var i = 0; i < list.length; i++) {
     var model = list[i];
     var modes = searchOk ? [true, false] : [false];
@@ -308,7 +313,7 @@ function gemini_(contents, opts) {
     for (var j = 0; j < modes.length; j++) {
       var payload = { contents: contents, generationConfig: { temperature: opts.temperature || 0.3 } };
       // ลดเวลาคิดของโมเดล (ตัวการหลักที่ทำให้ช้า): Gemini 2.5 ใช้ thinkingBudget, Gemini 3.x ใช้ thinkingLevel
-      if (useThinkCfg) payload.generationConfig.thinkingConfig = /^gemini-2\.5/.test(model) ? { thinkingBudget: 0 } : { thinkingLevel: 'low' };
+      if (useThinkCfg) payload.generationConfig.thinkingConfig = /^gemini-2\.5/.test(model) ? { thinkingBudget: 0 } : { thinkingLevel: /lite/.test(model) ? 'minimal' : 'low' };
       if (opts.system) payload.systemInstruction = { parts: [{ text: opts.system }] };
       if (modes[j]) payload.tools = [{ google_search: {} }];
       else payload.generationConfig.responseMimeType = 'application/json';
@@ -322,7 +327,7 @@ function gemini_(contents, opts) {
           var msg = res.getContentText();
           try { msg = JSON.parse(msg).error.message; } catch (x) {}
           var code = res.getResponseCode();
-          errors.push(model + (modes[j] ? '+search' : '') + ' [' + code + ']: ' + String(msg).substring(0, 160));
+          errors.push(model + (modes[j] ? '+search' : '') + ' [' + code + '] (' + ((Date.now() - t0) / 1000).toFixed(1) + 's): ' + String(msg).substring(0, 160));
           if (code === 400 && /API key/i.test(msg)) throw new Error('API key ไม่ถูกต้อง: ' + msg); // คีย์ผิด ลองรุ่นอื่นก็ไม่ช่วย
           if (code === 400 && /think/i.test(msg) && useThinkCfg) { useThinkCfg = false; j--; continue; } // รุ่นนี้ไม่รองรับการตั้งค่า thinking → ลองใหม่แบบไม่ตั้ง
           if (code === 429 && modes[j]) { searchOk = false; cache.put('search_quota_out', '1', 3600); continue; } // โควตาค้นเว็บหมด → ไม่ค้นแล้ว
@@ -368,7 +373,26 @@ var SYSTEM_EXPERT = 'คุณคือผู้เชี่ยวชาญน�
 var PERFUME_FIELDS_JSON = '"name":"","brand":"","brandGroup":"Middle Eastern | Designer | Niche | Thai","format":"EDP | EDT | Parfum | Extrait | EDC | Oil | Mist",' +
   '"category":"เช่น Woody Aromatic","topNotes":"","midNotes":"","baseNotes":""';
 
+/** เก็บผลลัพธ์ที่ไม่ขึ้นกับตู้ของผู้ใช้ไว้ 6 ชม. ถามซ้ำได้ทันที */
+function cached_(key, fn) {
+  var cache = CacheService.getScriptCache();
+  key = 'ai_' + Utilities.base64EncodeWebSafe(Utilities.computeDigest(Utilities.DigestAlgorithm.MD5, key));
+  var hit = cache.get(key);
+  if (hit) { var d = JSON.parse(hit); d._meta = d._meta || {}; d._meta.model = (d._meta.model || '') + ' (จากแคช ⚡)'; return d; }
+  var out = fn();
+  try { cache.put(key, JSON.stringify(out), 21600); } catch (e) {}
+  return out;
+}
+
 function ai_(p) {
+  if (p.task === 'identify' || p.task === 'dupe' || (p.task === 'batch' && !p.image)) {
+    var k = [p.task, String(p.name || '').toLowerCase().trim(), String(p.brand || '').toLowerCase().trim(), p.format || '', p.code || ''].join('|');
+    var raw = p; return cached_(k, function () { return aiRun_(raw); });
+  }
+  return aiRun_(p);
+}
+
+function aiRun_(p) {
   var ctx = p.context ? '\n\n=== ตู้น้ำหอมของผู้ใช้ (ชื่อ | แบรนด์ | หมวด | โน้ต | คะแนน | สถานะ | ฉีดไปกี่ครั้ง | ฉีดล่าสุด | แท็ก) ===\n' + p.context + '\n=== จบ ===' : '';
   switch (p.task) {
     case 'identify':
@@ -401,7 +425,7 @@ function ai_(p) {
         '\nmatchScore 0-100 = เข้ากับรสนิยม (ดูคะแนนและความถี่ที่ฉีด) หักคะแนนถ้าซ้ำกับของที่มีมาก ' +
         'similarOwned = ชื่อขวดในตู้ที่กลิ่นใกล้ (คัดลอกชื่อจากรายการเป๊ะๆ สูงสุด 5)\n' +
         'ตอบ JSON: {' + PERFUME_FIELDS_JSON + ',"longevity":"","bestFor":"","matchScore":0,"similarOwned":[],"pros":"","redFlags":"","finalVerdict":"","priceRange":"ช่วงราคาโดยประมาณในไทย (ถ้ารู้)"}')]),
-        { search: true, system: SYSTEM_EXPERT });
+        { search: true, system: SYSTEM_EXPERT, smart: PropertiesService.getScriptProperties().getProperty('AI_SMART_PURCHASE') === '1' });
 
     case 'recommend':
       return gemini_(user_([textPart_(
